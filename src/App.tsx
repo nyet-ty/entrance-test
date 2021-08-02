@@ -1,28 +1,47 @@
-import React, { useEffect, useReducer } from 'react'
-import { getRootChildren } from './api/functions'
-import { loadRootChildren, reducer } from './reducer/reducers'
+import React, { useEffect, useReducer, useCallback} from 'react'
+import { getNewChildren, getRootChildren } from './api/functions'
+import { loadRootChildren, reducer, isChildrenShow, loadNewChildren } from './reducer/reducers'
 
-import { Data } from './reducer/state'
-const initialState: Data[] = []
+import { Directory } from './reducer/state'
+const initialState: Directory[] = []
 
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState)
 
   useEffect(() => {
-    const getData = async () => {
-      const newData = await getRootChildren()
-      dispatch(loadRootChildren(newData))
+    const getDirectories = async () => {
+      const newDirectories = await getRootChildren()
+      dispatch(loadRootChildren(newDirectories))
     }
-    getData()
+    getDirectories()
   }, [])
+
+  const onClick = useCallback(async (isEnanled: boolean, id: number, showChildren: boolean | undefined) => {
+    if (!isEnanled) return
+    else if (showChildren === undefined) {
+      const newChildren = await getNewChildren(id)
+      dispatch(loadNewChildren(id, newChildren))
+    } 
+    dispatch(isChildrenShow(id, !showChildren))
+  }, [])
+
+  const renderMenu = (menu: Directory[]) => {
+    return menu.map((item) => (
+        <div key={item.title} style={{ marginLeft: '25px' }}>
+            <p onClick={() => onClick(!!item.children, item.id, item.showChildren)}>{item.title}</p>
+            {item.showChildren && item.children && renderMenu(item.children)}
+        </div>
+    ))
+  }
+
+
+  console.log(state)
 
   return (
     <div>
-        <ul>
-          {state.map((item) => (
-            <li key={item.title}>{item.title}</li>
-          ))}
-        </ul>
+      <ul>
+        {renderMenu(state)}
+      </ul>
     </div>
   );
 }

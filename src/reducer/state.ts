@@ -1,5 +1,6 @@
-export type Data = {
+export type Directory = {
   id: number,
   title: string,
-  children?: Data[]
+  children?: Directory[],
+  showChildren?: boolean,
 }
